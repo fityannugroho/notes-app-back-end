@@ -50,7 +50,7 @@ class NotesHandler {
     const { id } = request.params;
     const { title, body, tags } = request.payload;
     try {
-      this._service.updateNoteById(id, { title, body, tags });
+      this._service.editNoteById(id, { title, body, tags });
       return {
         status: 'success',
         message: 'Catatan berhasil diperbarui',
