@@ -1,7 +1,13 @@
+const ClientError = require('../../exceptions/ClientError');
+
 class NotesHandler {
   constructor(service, validator) {
     this._service = service;
     this._validator = validator;
+    this._serverErrorResponse = {
+      status: 'error',
+      message: 'Maaf, terjadi kesalahan pada server kami',
+    };
 
     // Bind the handlers to this class.
     this.postNoteHandler = this.postNoteHandler.bind(this);
@@ -24,10 +30,16 @@ class NotesHandler {
         data: { noteId },
       }).code(201);
     } catch (error) {
-      return h.response({
-        status: 'fail',
-        message: error.message,
-      }).code(400);
+      if (error instanceof ClientError) {
+        return h.response({
+          status: 'fail',
+          message: error.message,
+        }).code(error.statusCode);
+      }
+
+      // Server error.
+      console.error(error);
+      return h.response(this._serverErrorResponse).code(500);
     }
   }
 
@@ -50,10 +62,16 @@ class NotesHandler {
         data: { note },
       };
     } catch (error) {
-      return h.response({
-        status: 'fail',
-        message: error.message,
-      }).code(404);
+      if (error instanceof ClientError) {
+        return h.response({
+          status: 'fail',
+          message: error.message,
+        }).code(error.statusCode);
+      }
+
+      // Server error.
+      console.error(error);
+      return h.response(this._serverErrorResponse).code(500);
     }
   }
 
@@ -70,10 +88,16 @@ class NotesHandler {
         message: 'Catatan berhasil diperbarui',
       };
     } catch (error) {
-      return h.response({
-        status: 'fail',
-        message: error.message,
-      }).code(404);
+      if (error instanceof ClientError) {
+        return h.response({
+          status: 'fail',
+          message: error.message,
+        }).code(error.statusCode);
+      }
+
+      // Server error.
+      console.error(error);
+      return h.response(this._serverErrorResponse).code(500);
     }
   }
 
@@ -86,10 +110,16 @@ class NotesHandler {
         message: 'Catatan berhasil dihapus',
       };
     } catch (error) {
-      return h.response({
-        status: 'fail',
-        message: error.message,
-      }).code(404);
+      if (error instanceof ClientError) {
+        return h.response({
+          status: 'fail',
+          message: error.message,
+        }).code(error.statusCode);
+      }
+
+      // Server error.
+      console.error(error);
+      return h.response(this._serverErrorResponse).code(500);
     }
   }
 }
