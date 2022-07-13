@@ -12,9 +12,12 @@ class NotesHandler {
   }
 
   postNoteHandler(request, h) {
-    const { title = 'untitled', body, tags } = request.payload;
     try {
+      this._validator.validateNotePayload(request.payload);
+
+      const { title = 'untitled', body, tags } = request.payload;
       const noteId = this._service.addNote({ title, body, tags });
+
       return h.response({
         status: 'success',
         message: 'Catatan berhasil ditambahkan',
@@ -55,10 +58,13 @@ class NotesHandler {
   }
 
   putNoteByIdHandler(request, h) {
-    const { id } = request.params;
-    const { title, body, tags } = request.payload;
     try {
+      this._validator.validateNotePayload(request.payload);
+
+      const { id } = request.params;
+      const { title, body, tags } = request.payload;
       this._service.editNoteById(id, { title, body, tags });
+
       return {
         status: 'success',
         message: 'Catatan berhasil diperbarui',
