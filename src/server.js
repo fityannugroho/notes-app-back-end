@@ -7,6 +7,7 @@ const NotesValidator = require('./validator/notes');
 const users = require('./api/users');
 const UsersService = require('./services/postgres/UsersService');
 const UsersValidator = require('./validator/users');
+const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
   const server = Hapi.server({
@@ -38,6 +39,29 @@ const init = async () => {
       },
     },
   ]);
+
+  server.ext('onPreResponse', (request, h) => {
+    const { response } = request;
+
+    // Handle the client errors.
+    if (response instanceof ClientError) {
+      return h.response({
+        status: 'fail',
+        message: response.message,
+      }).code(response.statusCode);
+    }
+
+    // Handle the server errors.
+    if (response.isServer) {
+      console.error(`${response.name}: ${response.message}\n${response.stack}\n`);
+      return h.response({
+        status: 'error',
+        message: 'Maaf, terjadi kesalahan pada server kami',
+      }).code(500);
+    }
+
+    return h.continue;
+  });
 
   await server.start();
   console.log(`Server berjalan pada ${server.info.uri}`);

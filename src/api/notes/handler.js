@@ -1,13 +1,7 @@
-const ClientError = require('../../exceptions/ClientError');
-
 class NotesHandler {
   constructor(service, validator) {
     this._service = service;
     this._validator = validator;
-    this._serverErrorResponse = {
-      status: 'error',
-      message: 'Maaf, terjadi kesalahan pada server kami',
-    };
 
     // Bind the handlers to this class.
     this.postNoteHandler = this.postNoteHandler.bind(this);
@@ -18,109 +12,58 @@ class NotesHandler {
   }
 
   async postNoteHandler(request, h) {
-    try {
-      this._validator.validateNotePayload(request.payload);
+    this._validator.validateNotePayload(request.payload);
 
-      const { title = 'untitled', body, tags } = request.payload;
-      const noteId = await this._service.addNote({ title, body, tags });
+    const { title = 'untitled', body, tags } = request.payload;
+    const noteId = await this._service.addNote({ title, body, tags });
 
-      return h.response({
-        status: 'success',
-        message: 'Catatan berhasil ditambahkan',
-        data: { noteId },
-      }).code(201);
-    } catch (error) {
-      if (error instanceof ClientError) {
-        return h.response({
-          status: 'fail',
-          message: error.message,
-        }).code(error.statusCode);
-      }
-
-      // Server error.
-      console.error(error);
-      return h.response(this._serverErrorResponse).code(500);
-    }
+    return h.response({
+      status: 'success',
+      message: 'Catatan berhasil ditambahkan',
+      data: { noteId },
+    }).code(201);
   }
 
-  async getNotesHandler() {
+  async getNotesHandler(response, h) {
     const notes = await this._service.getNotes();
-    return {
+
+    return h.response({
       status: 'success',
-      data: {
-        notes,
-      },
-    };
+      data: { notes },
+    });
   }
 
   async getNoteByIdHandler(request, h) {
     const { id } = request.params;
-    try {
-      const note = await this._service.getNoteById(id);
-      return {
-        status: 'success',
-        data: { note },
-      };
-    } catch (error) {
-      if (error instanceof ClientError) {
-        return h.response({
-          status: 'fail',
-          message: error.message,
-        }).code(error.statusCode);
-      }
+    const note = await this._service.getNoteById(id);
 
-      // Server error.
-      console.error(error);
-      return h.response(this._serverErrorResponse).code(500);
-    }
+    return h.response({
+      status: 'success',
+      data: { note },
+    });
   }
 
   async putNoteByIdHandler(request, h) {
-    try {
-      this._validator.validateNotePayload(request.payload);
+    this._validator.validateNotePayload(request.payload);
 
-      const { id } = request.params;
-      const { title, body, tags } = request.payload;
-      await this._service.editNoteById(id, { title, body, tags });
+    const { id } = request.params;
+    const { title, body, tags } = request.payload;
+    await this._service.editNoteById(id, { title, body, tags });
 
-      return {
-        status: 'success',
-        message: 'Catatan berhasil diperbarui',
-      };
-    } catch (error) {
-      if (error instanceof ClientError) {
-        return h.response({
-          status: 'fail',
-          message: error.message,
-        }).code(error.statusCode);
-      }
-
-      // Server error.
-      console.error(error);
-      return h.response(this._serverErrorResponse).code(500);
-    }
+    return h.response({
+      status: 'success',
+      message: 'Catatan berhasil diperbarui',
+    });
   }
 
   async deleteNoteByIdHandler(request, h) {
     const { id } = request.params;
-    try {
-      await this._service.deleteNoteById(id);
-      return {
-        status: 'success',
-        message: 'Catatan berhasil dihapus',
-      };
-    } catch (error) {
-      if (error instanceof ClientError) {
-        return h.response({
-          status: 'fail',
-          message: error.message,
-        }).code(error.statusCode);
-      }
+    await this._service.deleteNoteById(id);
 
-      // Server error.
-      console.error(error);
-      return h.response(this._serverErrorResponse).code(500);
-    }
+    return h.response({
+      status: 'success',
+      message: 'Catatan berhasil dihapus',
+    });
   }
 }
 
