@@ -1,5 +1,6 @@
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
+const AuthorizationError = require('../../exceptions/AuthorizationError');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
@@ -15,14 +16,16 @@ class NotesService {
    * @returns {Promise<string>} id of the new note.
    * @throws {Error} if failed to add note.
    */
-  async addNote({ title, body, tags }) {
+  async addNote({
+    title, body, tags, ownerId,
+  }) {
     const id = nanoid(16);
     const createdAt = new Date().toISOString();
     const updatedAt = createdAt;
 
     const result = await this._pool.query({
-      text: 'INSERT INTO notes (id, title, body, tags, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-      values: [id, title, body, tags, createdAt, updatedAt],
+      text: 'INSERT INTO notes (id, title, body, tags, created_at, updated_at, owner) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+      values: [id, title, body, tags, createdAt, updatedAt, ownerId],
     });
 
     if (!result.rows[0].id) {
@@ -33,11 +36,16 @@ class NotesService {
   }
 
   /**
-   * Get all notes.
+   * Get all notes that belong to a user.
+   * @param {string} userId The user's id.
    * @returns {Promise<object[]>} list of notes.
    */
-  async getNotes() {
-    const result = await this._pool.query('SELECT * FROM notes');
+  async getNotes(userId) {
+    const result = await this._pool.query({
+      text: 'SELECT * FROM notes WHERE owner = $1',
+      values: [userId],
+    });
+
     return result.rows.map(mapDBToModel);
   }
 
@@ -91,6 +99,28 @@ class NotesService {
 
     if (!result.rows.length) {
       throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan');
+    }
+  }
+
+  /**
+   * Check if user is owner of the note.
+   * @param {string} id The note's id.
+   * @param {string} userId The id of user who is trying to access the note.
+   * @throws {NotFoundError} if note not found.
+   * @throws {AuthorizationError} if user is not the note's owner.
+   */
+  async verifyNoteOwner(id, userId) {
+    const result = await this._pool.query({
+      text: 'SELECT * FROM notes WHERE id = $1',
+      values: [id],
+    });
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Catatan tidak ditemukan');
+    }
+
+    if (userId !== result.rows[0].owner) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
   }
 }
