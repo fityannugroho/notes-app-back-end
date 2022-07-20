@@ -32,7 +32,24 @@ const init = async () => {
     },
   ]);
 
-  // Register the plugins.
+  // Define jwt authentication strategy.
+  server.auth.strategy('notesapp_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
+  });
+
+  // Register internal plugins.
   await server.register([
     // Notes plugin
     {
@@ -61,23 +78,6 @@ const init = async () => {
       },
     },
   ]);
-
-  // Define jwt authentication strategy.
-  server.auth.strategy('notesapp_jwt', 'jwt', {
-    key: process.env.ACCESS_TOKEN_KEY,
-    verify: {
-      aud: false,
-      iss: false,
-      sub: false,
-      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
-    },
-    validate: (artifacts) => ({
-      isValid: true,
-      credentials: {
-        id: artifacts.decoded.payload.id,
-      },
-    }),
-  });
 
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
