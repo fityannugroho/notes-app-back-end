@@ -130,7 +130,7 @@ class NotesService {
    * @param {string} id The note's id.
    * @param {string} userId The id of user who is trying to access the note.
    * @throws {NotFoundError} if note not found.
-   * @throws {InvariantError} if user is not the owner or the collaborator of the note.
+   * @throws {AuthorizationError} if user is not the owner or the collaborator of the note.
    */
   async verifyNoteAccess(id, userId) {
     // Check if user is owner of the note.
@@ -142,7 +142,11 @@ class NotesService {
       }
 
       // Check if user is collaborator of the note.
-      await this._collaborationsService.verifyCollaborator(id, userId);
+      try {
+        await this._collaborationsService.verifyCollaborator(id, userId);
+      } catch {
+        throw error;
+      }
     }
   }
 }
