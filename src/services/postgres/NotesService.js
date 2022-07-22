@@ -142,7 +142,7 @@ class NotesService {
       }
 
       // Check if user is collaborator of the note.
-      await this._collaborationService.verifyCollaborator(id, userId);
+      await this._collaborationsService.verifyCollaborator(id, userId);
     }
   }
 }
