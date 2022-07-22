@@ -18,6 +18,9 @@ const collaborations = require('./api/collaborations');
 const CollaborationsValidator = require('./validator/collaborations');
 
 const init = async () => {
+  const collaborationsService = new CollaborationsService();
+  const notesService = new NotesService(collaborationsService);
+
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
@@ -58,7 +61,7 @@ const init = async () => {
     {
       plugin: notes,
       options: {
-        service: new NotesService(new CollaborationsService()),
+        service: notesService,
         validator: NotesValidator,
       },
     },
@@ -84,8 +87,8 @@ const init = async () => {
     {
       plugin: collaborations,
       options: {
-        collaborationsService: new CollaborationsService(),
-        notesService: new NotesService(),
+        collaborationsService,
+        notesService,
         validator: CollaborationsValidator,
       },
     },
