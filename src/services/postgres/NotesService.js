@@ -6,8 +6,9 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
 
 class NotesService {
-  constructor() {
+  constructor(collaborationsService) {
     this._pool = new Pool();
+    this._collaborationsService = collaborationsService;
   }
 
   /**
@@ -121,6 +122,27 @@ class NotesService {
 
     if (userId !== result.rows[0].owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  /**
+   * Check if user is owner of the note or the collaborator.
+   * @param {string} id The note's id.
+   * @param {string} userId The id of user who is trying to access the note.
+   * @throws {NotFoundError} if note not found.
+   * @throws {InvariantError} if user is not the owner or the collaborator of the note.
+   */
+  async verifyNoteAccess(id, userId) {
+    // Check if user is owner of the note.
+    try {
+      await this.verifyNoteOwner(id, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      // Check if user is collaborator of the note.
+      await this._collaborationService.verifyCollaborator(id, userId);
     }
   }
 }
