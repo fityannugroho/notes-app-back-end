@@ -100,6 +100,20 @@ class UsersService {
 
     return id;
   }
+
+  /**
+   * Get all users that match the given username.
+   * @param {string} username The username.
+   * @returns {Promise<object[]>} The result array.
+   */
+  async getUsersByUsername(username) {
+    const result = await this._pool.query({
+      text: `SELECT id, username, fullname FROM ${this._tableName} WHERE username LIKE $1`,
+      values: [`%${username}%`],
+    });
+
+    return result.rows;
+  }
 }
 
 module.exports = UsersService;
