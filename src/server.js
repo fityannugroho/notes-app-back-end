@@ -22,13 +22,16 @@ const _exports = require('./api/exports');
 const ProducerService = require('./services/rabbitmq/ProducerService');
 const ExportsValidator = require('./validator/exports');
 const StorageService = require('./services/storage/StorageService');
+const S3StorageService = require('./services/s3/StorageService');
 const uploads = require('./api/uploads');
 const UploadsValidator = require('./validator/uploads');
 
 const init = async () => {
   const collaborationsService = new CollaborationsService();
   const notesService = new NotesService(collaborationsService);
-  const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
+  const storageService = (process.env.STORAGE_PROVIDER === 's3')
+    ? new S3StorageService()
+    : new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
 
   const server = Hapi.server({
     port: process.env.PORT,
