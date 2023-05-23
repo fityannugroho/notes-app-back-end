@@ -1,5 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 const Hapi = require('@hapi/hapi');
+const path = require('path');
 
 /**
  * @param {*} handler
@@ -15,6 +16,15 @@ const routes = (handler) => [
         allow: 'multipart/form-data',
         multipart: true,
         output: 'stream',
+      },
+    },
+  },
+  {
+    method: 'GET',
+    path: '/upload/{param*}',
+    handler: {
+      directory: {
+        path: path.resolve(__dirname, 'file'),
       },
     },
   },
