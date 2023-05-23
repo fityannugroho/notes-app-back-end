@@ -1,6 +1,6 @@
 {
   "name": "notes-app-back-end",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -20,8 +20,10 @@
   },
   "dependencies": {
     "@hapi/hapi": "^20.1.0",
+    "@hapi/inert": "^7.1.0",
     "@hapi/jwt": "^2.1.1",
     "amqplib": "^0.10.3",
+    "aws-sdk": "^2.1382.0",
     "bcrypt": "^5.0.1",
     "dotenv": "^16.0.1",
     "joi": "^17.6.0",
